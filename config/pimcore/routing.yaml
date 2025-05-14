@@ -1,0 +1,5 @@
+starfruit_translator_default:
+    resource: "@StarfruitTranslatorBundle/src/Controller/Admin/*"
+    type: annotation
+    prefix: /admin/stf-trans
+    name_prefix: 'admin-stf-trans'

@@ -1,0 +1,25 @@
+{
+  "name":"starfruit/translator-bundle",
+  "description":"Starfruit Translator Bundle",
+  "keywords":[
+    "starfruit", "translator"
+  ],
+  "homepage":"https://github.com/starfruit-php/translator-bundle",
+  "license":"MIT",
+  "authors":[
+    {
+      "name":"Nguyen Hoang Anh",
+      "email":"anhnh@starfruit.com.vn",
+      "role":"Developer"
+    }
+  ],
+  "require":{
+  },
+  "suggest":{
+  },
+  "autoload": {
+    "psr-4": {
+      "Starfruit\\TranslatorBundle\\": "src/"
+    }
+  }
+}

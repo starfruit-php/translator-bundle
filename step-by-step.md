@@ -6,6 +6,10 @@
 
 2. Kiểm tra GCP bằng lệnh `gcloud auth print-identity-token`, nếu cài đặt thành công thì kết quả trả ra là 1 chuỗi token.
 
+## Thông tin tích hợp API
+
+Tạo bản ghi `translator_api_endpoint` trong Website Settings với type `Text` để lưu giá trị API endpoint dạng `https://...............`
+
 ## Cấu hình DataObject
 
 Bổ sung cấu hình trong file `config/config.yaml` theo mẫu:

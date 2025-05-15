@@ -8,7 +8,7 @@
 
 ## Thông tin tích hợp API
 
-Tạo bản ghi `translator_api_endpoint` trong Website Settings với type `Text` để lưu giá trị API endpoint dạng `https://...............`
+Tạo bản ghi `translator_api_endpoint` trong Website Settings với type `Text` để lưu giá trị API endpoint dạng `https://...............`.
 
 ## Cấu hình DataObject
 
@@ -26,6 +26,10 @@ starfruit_translator:
             Category:
                 field_need_translate:
                     - name
+        collection_need_translate: # danh sách các Field Collection có trường cần dịch
+            PriceRule: # Tên Field Collection
+                field_need_translate: # danh sách trường cần dịch (input, textarea hoặc wysiwyg)
+                    - name
 ```
 
 ## Cấu hình Document
@@ -40,6 +44,6 @@ Các bước khi tạo mới hoặc bổ sung cho document để có thể dịc
 7. Chọn tab `Navigation & Properties` -> Chọn `Language` phù hợp cho *Target* -> Bấm `Save` hoặc `Save & Publish` để lưu cấu hình
 8. Nếu chưa có nút dịch, cần liên kết *Source* và *Target* theo bước 9 -> 12
 9. Trên thanh công cụ, chọn chức năng `Translation` (biểu tượng dịch/từ điển), mở mũi tên chọn `Link existing Document`
-10. Trên cây thư mục, đặt chuột vào *Source* saud đó kéo thả (drag & drop) vào ô `Translation` của hộp thông tin
+10. Trên cây thư mục, đặt chuột vào *Source* sau đó kéo thả (drag & drop) vào ô `Translation` của hộp thông tin
 11. Xác nhận thông tin `Language` hiển thị `Vietnamese [vi]`
 12. Bấm `Apply` để xác nhận

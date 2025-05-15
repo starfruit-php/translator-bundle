@@ -66,7 +66,7 @@ document.addEventListener(pimcore.events.postOpenObject, (e) => {
     canTranslate();
     function canTranslate()
     {
-        fetch('/admin/stf-trans/translator/can-translate/' + id, {
+        fetch('/admin/stf-trans/translator/object-can-translate/' + id, {
             method: 'POST',
             headers: myHeaders
         })
@@ -120,9 +120,9 @@ document.addEventListener(pimcore.events.postOpenObject, (e) => {
                         }, 2000);
                     }.bind(this)
                 };
-            
+
                 buttons.push(buttonConfig);
-            }  
+            }
         }
 
         e.detail.object.toolbar.add({
@@ -154,7 +154,7 @@ document.addEventListener(pimcore.events.postOpenObject, (e) => {
                 //         .catch(error => {
                 //             pimcore.helpers.loadingHide();
                 //         });
-                // }, 2000) 
+                // }, 2000)
             }.bind(this)
         });
     }

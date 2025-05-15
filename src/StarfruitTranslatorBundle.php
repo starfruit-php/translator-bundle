@@ -18,7 +18,8 @@ class StarfruitTranslatorBundle extends AbstractPimcoreBundle implements Pimcore
     public function getJsPaths(): array
     {
         return [
-            '/bundles/starfruittranslator/js/pimcore/translator-button.js'
+            '/bundles/starfruittranslator/js/pimcore/startup.js',
+            '/bundles/starfruittranslator/js/pimcore/translator-button.js',
         ];
     }
 

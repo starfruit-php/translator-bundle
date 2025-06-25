@@ -82,7 +82,7 @@ document.addEventListener(pimcore.events.postOpenObject, (e) => {
 
     function initTranslateObjectButton()
     {
-        var buttonText = 'Chọn để dịch';
+        var buttonText = 'Dịch tất cả';
         var buttons = [];
 
         var available_languages = pimcore.available_languages;
@@ -134,28 +134,25 @@ document.addEventListener(pimcore.events.postOpenObject, (e) => {
                 ...buttons
             ],
             handler: function (button) {
-                // pimcore.helpers.loadingShow();
-                // var saveVersion = object.save('autoSave');
-                // window.setTimeout(function() {
-                //     var myHeaders = new Headers();
-                //     var requestOptions = {
-                //         method: 'POST',
-                //         headers: myHeaders
-                //     };
+                pimcore.helpers.loadingShow();
+                var saveVersion = object.save('autoSave');
+                window.setTimeout(function() {
+                    var requestOptions = {
+                        method: 'POST',
+                        headers: myHeaders
+                    };
 
-                //     var id = object.id;
-
-                //     fetch('/admin/trans-post?id=' + id, requestOptions)
-                //         .then(response => response.text())
-                //         .then(result => {
-                //             pimcore.helpers.loadingHide();
-                //             object.reload([])
-                //         })
-                //         .catch(error => {
-                //             pimcore.helpers.loadingHide();
-                //         });
-                // }, 2000)
-            }.bind(this)
+                    fetch('/admin/stf-trans/translator/object/' + id + '/all', requestOptions)
+                        .then(response => response.text())
+                        .then(result => {
+                            pimcore.helpers.loadingHide();
+                            object.reload([]);
+                        })
+                        .catch(error => {
+                            pimcore.helpers.loadingHide();
+                        });
+                }, 2000);
+    }.bind(this)
         });
     }
 });

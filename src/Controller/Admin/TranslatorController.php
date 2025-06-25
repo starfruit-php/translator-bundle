@@ -47,7 +47,14 @@ class TranslatorController extends BaseController
         $object = DataObject::getById((int) $id);
 
         // validate
-        if (!$language || $language == 'vi') return $this->sendResponse('Invalid language!');
+        if ($language == 'vi') return $this->sendResponse('Invalid language!');
+
+        if ($language == 'all') {
+            $validLanguages = \Pimcore\Tool::getValidLanguages();
+            $translateLanguages = array_filter($validLanguages, fn($e) => $e !== 'vi');
+        } else {
+            $translateLanguages = [$language];
+        }
 
         $validObject = $object && !($object instanceof DataObject\Folder);
         if (!$validObject) return $this->sendResponse('Invalid object!');
@@ -124,19 +131,21 @@ class TranslatorController extends BaseController
                             continue;
                         }
 
-                        $colTargetContent = $this->translate($language, $colFieldContent, $logTitle . " - FC - $collectionType ");
+                        foreach ($translateLanguages as $language) {
+                            $colTargetContent = $this->translate($language, $colFieldContent, $logTitle . " - FC - $collectionType ");
 
-                        if (empty($colTargetContent)) {
-                            continue;
-                        }
+                            if (empty($colTargetContent)) {
+                                continue;
+                            }
 
-                        $colFunction = 'set' . ucfirst($colField);
+                            $colFunction = 'set' . ucfirst($colField);
 
-                        if (!method_exists($collectionItem, $colFunction)) {
-                            continue;
-                        }
+                            if (!method_exists($collectionItem, $colFunction)) {
+                                continue;
+                            }
 
-                        $collectionItem->{$colFunction}($colTargetContent, $language);
+                            $collectionItem->{$colFunction}($colTargetContent, $language);
+                        }  
                     }
                 }
 
@@ -157,21 +166,25 @@ class TranslatorController extends BaseController
                 continue;
             }
 
-            $targetContent = $this->translate($language, $content, $logTitle);
+            foreach ($translateLanguages as $language) {
+                $targetContent = $this->translate($language, $content, $logTitle);
 
-            if (empty($targetContent)) {
-                continue;
+                if (empty($targetContent)) {
+                    continue;
+                }
+
+                $translatedData[$field][$language] = $targetContent;
             }
-
-            $translatedData[$field] = $targetContent;
         }
 
         if (!empty($translatedData)) {
             $needSave = true;
-            foreach ($translatedData as $field => $value) {
+            foreach ($translatedData as $field => $value_languages) {
                 $function = 'set' . ucfirst($field);
 
-                $lastestData->{$function}($value, $language);
+                foreach ($value_languages as $language => $value) {
+                    $lastestData->{$function}($value, $language);
+                }
             }
         }
 

@@ -17,14 +17,10 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Textarea;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Wysiwyg;
 use Pimcore\Model\DataObject\ClassDefinition\Data\Fieldcollections;
 
-/**
- * @Route("/translator")
- */
+#[Route('/translator')]
 class TranslatorController extends BaseController
 {
-    /**
-     * @Route("/object-can-translate/{id}", methods={"POST"})
-     */
+    #[Route('/object-can-translate/{id}', methods:"POST")]
     public function canTranslateAction($id)
     {
         if (empty($this->classNeedTranslateList)) return $this->sendResponse(['ok' => false]);
@@ -39,9 +35,7 @@ class TranslatorController extends BaseController
         return $this->sendResponse(['ok' => $canTranslate]);
     }
 
-    /**
-     * @Route("/object/{id}/{language}", methods={"POST"})
-     */
+    #[Route('/object/{id}/{language}', methods:"POST")]
     public function objectAction($id, $language)
     {
         $object = DataObject::getById((int) $id);
@@ -195,9 +189,7 @@ class TranslatorController extends BaseController
         return $this->sendResponse('Success!');
     }
 
-    /**
-     * @Route("/document/{id}/{language}/{sourceId}", methods={"POST"})
-     */
+    #[Route('/document/{id}/{language}/{sourceId}', methods:"POST")]
     public function documentAction($id, $language, $sourceId)
     {
         // valid

@@ -3,7 +3,10 @@ var csrfToken = pimcore.settings.csrfToken;
 var myHeaders = {
     'X-Pimcore-CSRF-Token': csrfToken
 };
-
+var requestOptions = {
+    method: 'POST',
+    headers: myHeaders
+};
 
 document.addEventListener(pimcore.events.postOpenDocument, (e) => {
     var item = e.detail.document;
@@ -103,10 +106,6 @@ document.addEventListener(pimcore.events.postOpenObject, (e) => {
                         pimcore.helpers.loadingShow();
                         var saveVersion = object.save('autoSave');
                         window.setTimeout(function() {
-                            var requestOptions = {
-                                method: 'POST',
-                                headers: myHeaders
-                            };
 
                             fetch('/admin/stf-trans/translator/object/' + id + '/' + button.config.language, requestOptions)
                                 .then(response => response.text())
@@ -136,23 +135,58 @@ document.addEventListener(pimcore.events.postOpenObject, (e) => {
             handler: function (button) {
                 pimcore.helpers.loadingShow();
                 var saveVersion = object.save('autoSave');
-                window.setTimeout(function() {
-                    var requestOptions = {
-                        method: 'POST',
-                        headers: myHeaders
-                    };
+                // window.setTimeout(function() {
+                //     var requestOptions = {
+                //         method: 'POST',
+                //         headers: myHeaders
+                //     };
 
-                    fetch('/admin/stf-trans/translator/object/' + id + '/all', requestOptions)
-                        .then(response => response.text())
-                        .then(result => {
-                            pimcore.helpers.loadingHide();
-                            object.reload([]);
-                        })
-                        .catch(error => {
-                            pimcore.helpers.loadingHide();
-                        });
+                //     fetch('/admin/stf-trans/translator/object/' + id + '/all', requestOptions)
+                //         .then(response => response.text())
+                //         .then(result => {
+                //             pimcore.helpers.loadingHide();
+                //             object.reload([]);
+                //         })
+                //         .catch(error => {
+                //             pimcore.helpers.loadingHide();
+                //         });
+                // }, 2000);
+
+                window.setTimeout(function() {
+                    var langNeedTransTotal = websiteLanguages.length - 1;
+                    for (let i = 0; i < websiteLanguages.length; i++) {
+                        var lang = websiteLanguages[i];
+
+                        if (lang != 'vi') {
+                            fetch('/admin/stf-trans/translator/object/' + id + '/' + lang, requestOptions)
+                                .then(response => response.text())
+                                .then(result => {
+                                    langNeedTransTotal--;
+
+                                    if (langNeedTransTotal == 0) {
+                                        fetch('/admin/stf-trans/translator/object-merge/' + id , requestOptions)
+                                            .then(response => response.text())
+                                            .then(result => {
+                                                pimcore.helpers.loadingHide();
+                                                object.reload([]);
+                                            })
+                                            .catch(error => {
+                                                pimcore.helpers.loadingHide();
+                                                object.reload([]);
+                                            });
+                                    }
+                                })
+                                .catch(error => {
+                                    langNeedTransTotal--;
+
+                                    if (langNeedTransTotal == 0) {
+                                        pimcore.helpers.loadingHide();
+                                    }
+                                });
+                        }
+                    }
                 }, 2000);
-    }.bind(this)
+            }.bind(this)
         });
     }
 });

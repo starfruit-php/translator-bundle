@@ -20,6 +20,7 @@ use Pimcore\Model\WebsiteSetting;
 class BaseController extends \Pimcore\Controller\FrontendController
 {
     const DEFAULT_LANG = 'vi';
+    const DEFAULT_VERSION_NOTE = 'stf_translator_version';
 
     protected $config;
     protected $classNeedTranslateList;

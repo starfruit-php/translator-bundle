@@ -20,6 +20,8 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\Fieldcollections;
 #[Route('/translator')]
 class TranslatorController extends BaseController
 {
+    protected $fieldNeedTranslates;
+
     #[Route('/object-can-translate/{id}', methods:"POST")]
     public function canTranslateAction($id)
     {
@@ -183,7 +185,172 @@ class TranslatorController extends BaseController
         }
 
         if ($needSave) {
-            $lastestData->saveVersion();
+            $lastestData->saveVersion(true, false, self::DEFAULT_VERSION_NOTE);
+        }
+
+        return $this->sendResponse('Success!');
+    }
+
+    #[Route('/object-merge/{id}', methods:"POST")]
+    public function objectMergeAction($id)
+    {
+        $object = DataObject::getById((int) $id);
+
+        $validObject = $object && !($object instanceof DataObject\Folder);
+        if (!$validObject) return $this->sendResponse('Invalid object!');
+
+        $classname = $object->getClassname();
+        $canTranslate = array_key_exists($classname, $this->classNeedTranslateList);
+        if (!$canTranslate) return $this->sendResponse('No config for Class of object!');
+
+        $classConfig = $this->classNeedTranslateList[$classname];
+        $fieldNeedTranslates = isset($classConfig['field_need_translate']) ? $classConfig['field_need_translate'] : [];
+        if (empty($fieldNeedTranslates)) return $this->sendResponse('No fields config for translate!');
+
+        $list = new Version\Listing();
+        $list->setLoadAutoSave(true);
+        $list->setCondition('cid = ? AND ctype = ?', [
+            $object->getId(),
+            Element\Service::getElementType($object)
+        ])
+            ->setOrderKey('date')
+            ->setOrder('DESC');
+
+        $versions = $list->load();
+
+        if (count($versions) > 0) {
+            $mergeVersionNote = null;
+            $mergeVersionData = null;
+
+            $needSave = false;
+            $classDefinition = $object->getClass();
+            $translatedData = [];
+            $translatedFieldCollectionData = [];
+
+            foreach ($versions as $version) {
+                $versionNote = $version->getNote();
+                if (empty($versionNote)) {
+                    break;
+                }
+
+                $versionData = $version->getData();
+                $validLanguages = \Pimcore\Tool::getValidLanguages();
+                $translateLanguages = array_filter($validLanguages, fn($e) => $e !== 'vi');
+
+                if (empty($mergeVersionNote) && empty($mergeVersion)) {
+                    $mergeVersionNote = $versionNote;
+                    $mergeVersionData = $versionData;
+                } else {
+                    if ($versionNote !== $mergeVersionNote) {
+                        break;
+                    }
+
+                    foreach ($fieldNeedTranslates as $field) {
+                        $function = 'get' . ucfirst($field);
+
+                        if (!method_exists($versionData, $function)) {
+                            continue;
+                        }
+
+                        $fieldDef = $classDefinition->getFieldDefinition($field);
+
+                        if ($fieldDef instanceof Fieldcollections && !empty($this->collectionNeedTranslateList)) {
+                            $collection = $versionData->{$function}();
+                            if (empty($collection)) {
+                                continue;
+                            }
+
+                            $collectionItems = $collection->getItems();
+                            if (empty($collectionItems)) {
+                                continue;
+                            }
+
+                            foreach ($collectionItems as $key => $collectionItem) {
+                                $collectionType = $collectionItem->getType();
+
+                                $collectionTransFields = isset($this->collectionNeedTranslateList[$collectionType]['field_need_translate']) ? $this->collectionNeedTranslateList[$collectionType]['field_need_translate'] : [];
+
+                                if (empty($collectionTransFields)) {
+                                    continue;
+                                }
+
+                                foreach ($collectionTransFields as $colField) {
+                                    $colFunction = 'get' . ucfirst($colField);
+
+                                    if (!method_exists($collectionItem, $colFunction)) {
+                                        continue;
+                                    }
+
+                                    foreach ($translateLanguages as $language) {
+                                        $colTargetContent = $collectionItem->{$colFunction}($language);
+                                        $colTargetContent = trim(strip_tags($colTargetContent));
+
+                                        if (empty($colTargetContent) || !method_exists($collectionItem, 'set' . ucfirst($colField))) {
+                                            continue;
+                                        }
+
+                                        $translatedFieldCollectionData[$field][$key][$colField][$language] = $colTargetContent;
+                                    }
+                                }
+                            }
+                        }
+
+                        $isStringField = $fieldDef instanceof Input
+                            || $fieldDef instanceof Textarea
+                            || $fieldDef instanceof Wysiwyg;
+                        if (!$isStringField) {
+                            continue;
+                        }
+
+                        foreach ($translateLanguages as $language) {
+                            $targetContent = $versionData->{$function}($language);
+                            $targetContent = trim(strip_tags($targetContent));
+
+                            if (empty($targetContent)) {
+                                continue;
+                            }
+
+                            $translatedData[$field][$language] = $targetContent;
+                        }
+                    }
+                }
+
+                $version->delete();
+            }
+
+            foreach ($translatedFieldCollectionData as $colField => $key_field_lang_value) {
+                $function = 'get' . ucfirst($colField);
+                $collection = $mergeVersionData->{$function}();
+                $collectionItems = $collection->getItems();
+
+                foreach ($key_field_lang_value as $colKey => $field_lang_value) {
+                    $collectionItem = $collectionItems[$colKey];
+
+                    foreach ($field_lang_value as $colField => $lang_value) {
+                        foreach ($lang_value as $colLang => $colValue) {
+                            $collectionItem->{'set' . ucfirst($colField)}($colValue, $colLang);
+                        }
+                    }
+                }
+
+                $mergeVersionData->{'set' . ucfirst($field)}($collection);
+                $needSave = true;
+            }
+
+            if (!empty($translatedData)) {
+                $needSave = true;
+                foreach ($translatedData as $field => $value_languages) {
+                    $function = 'set' . ucfirst($field);
+
+                    foreach ($value_languages as $language => $value) {
+                        $mergeVersionData->{$function}($value, $language);
+                    }
+                }
+            }
+
+            if ($needSave) {
+                $mergeVersionData->saveVersion();
+            }
         }
 
         return $this->sendResponse('Success!');

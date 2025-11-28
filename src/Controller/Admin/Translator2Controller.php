@@ -54,7 +54,7 @@ class Translator2Controller extends Base2Controller
         return $this->sendResponse([]);
     }
 
-    #[Route('/object/{id}/{language}/{field}', methods:"POST")]
+    #[Route('/object-field/{id}/{language}/{field}', methods:"POST")]
     public function objectWithLanguageFieldAction($id, $language, $field)
     {
         if ($language == 'vi') return $this->sendResponse('Invalid language!');
